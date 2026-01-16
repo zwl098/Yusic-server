@@ -25,11 +25,13 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "http-proxy-middleware": "^3.0.5",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/http-proxy-middleware": "^1.0.0",
     "@types/node": "^25.0.8",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",

@@ -6,8 +6,27 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import { createProxyMiddleware } from 'http-proxy-middleware';
+
 const app = express();
 const httpServer = createServer(app);
+
+// API Proxy Configuration
+app.use('/api', createProxyMiddleware({
+    target: 'https://music-dl.sayqz.com/api',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/api': '', // Remove /api prefix when forwarding
+    },
+    on: {
+        proxyRes: (proxyRes, req, res) => {
+            if (proxyRes.headers['location']) {
+                // Force HTTPS in redirect Location header
+                proxyRes.headers['location'] = proxyRes.headers['location'].replace(/^http:\/\//, 'https://');
+            }
+        }
+    }
+}));
 const io = new Server(httpServer, {
     cors: {
         origin: "*", // 在生产环境中需要修改为具体的前端地址
