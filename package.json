@@ -22,11 +22,14 @@
   },
   "homepage": "https://github.com/zwl098/Yusic-server#readme",
   "dependencies": {
+    "@types/uuid": "^11.0.0",
+    "axios": "^1.13.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "http-proxy-middleware": "^3.0.5",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
