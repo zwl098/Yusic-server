@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { RoomService } from '../room/room.service';
 import { broadcastStateChange } from '../ws/gateway';
+import { success, error } from './response';
 
 const router = Router();
 
 // Create Room
 router.post('/rooms', (req, res) => {
     const roomId = RoomService.createRoom();
-    res.json({ roomId });
+    success(res, { roomId });
 });
 
 // Get Room State
@@ -15,13 +16,13 @@ router.get('/rooms/:id/state', (req, res) => {
     const { id } = req.params;
     const room = RoomService.getRoom(id);
     if (!room) {
-        res.status(404).json({ error: 'Room not found' });
+        error(res, 'Room not found', 404);
         return;
     }
 
     // Return calculated current time, not raw state
     const currentTime = RoomService.getCurrentTime(room);
-    res.json({
+    success(res, {
         ...room,
         currentTime
     });
@@ -34,7 +35,7 @@ router.post('/rooms/:id/play', (req, res) => {
 
     const room = RoomService.play(id, songId);
     if (!room) {
-        res.status(404).json({ error: 'Room not found' });
+        error(res, 'Room not found', 404);
         return;
     }
 
@@ -45,7 +46,7 @@ router.post('/rooms/:id/play', (req, res) => {
         // We can also send currentTime offset if needed, but startTime is the source of truth
     });
 
-    res.json({ success: true, state: room });
+    success(res, room);
 });
 
 // Pause
@@ -54,7 +55,7 @@ router.post('/rooms/:id/pause', (req, res) => {
 
     const room = RoomService.pause(id);
     if (!room) {
-        res.status(404).json({ error: 'Room not found' });
+        error(res, 'Room not found', 404);
         return;
     }
 
@@ -63,7 +64,7 @@ router.post('/rooms/:id/pause', (req, res) => {
         pauseTime: room.pauseTime
     });
 
-    res.json({ success: true, state: room });
+    success(res, room);
 });
 
 // Change Song (Reset)
@@ -72,13 +73,13 @@ router.post('/rooms/:id/song', (req, res) => {
     const { songId } = req.body;
 
     if (!songId) {
-        res.status(400).json({ error: 'songId is required' });
+        error(res, 'songId is required', 400);
         return;
     }
 
     const room = RoomService.setSong(id, songId);
     if (!room) {
-        res.status(404).json({ error: 'Room not found' });
+        error(res, 'Room not found', 404);
         return;
     }
 
@@ -87,7 +88,7 @@ router.post('/rooms/:id/song', (req, res) => {
     // SEEK/SONG_CHANGE is optional but good to have.
     broadcastStateChange('SONG_CHANGE', id, { songId: room.songId });
 
-    res.json({ success: true, state: room });
+    success(res, room);
 });
 
 export default router;

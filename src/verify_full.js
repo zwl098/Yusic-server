@@ -9,18 +9,18 @@ async function verify() {
         // 1. Create Room
         console.log('1. Creating Room...');
         const createRes = await axios.post(`${BASE_URL}/rooms`);
-        const roomId = createRes.data.roomId;
+        const roomId = createRes.data.data.roomId;
         console.log(`   Room ID: ${roomId}`);
 
         // 2. Play
         console.log('2. Playing Song...');
         const playRes = await axios.post(`${BASE_URL}/rooms/${roomId}/play`, { songId: 'song_full_verify' });
-        const startState = playRes.data.state;
+        const startState = playRes.data.data;
         const serverStartTime = startState.startTime;
         console.log(`   Playing. Server StartTime: ${serverStartTime}`);
 
         // 3. Immediate State Check
-        const state1 = (await axios.get(`${BASE_URL}/rooms/${roomId}/state`)).data;
+        const state1 = (await axios.get(`${BASE_URL}/rooms/${roomId}/state`)).data.data;
         console.log(`   State 1 (Immediate): currentTime = ${state1.currentTime.toFixed(3)}s`);
 
         // 4. Simulate Disconnect / Latency (Wait 3s)
@@ -28,7 +28,7 @@ async function verify() {
         await new Promise(r => setTimeout(r, 3000));
 
         // 5. Reconnect (Get State)
-        const state2 = (await axios.get(`${BASE_URL}/rooms/${roomId}/state`)).data;
+        const state2 = (await axios.get(`${BASE_URL}/rooms/${roomId}/state`)).data.data;
         console.log(`   State 2 (After 3s): currentTime = ${state2.currentTime.toFixed(3)}s`);
 
         // Verification Logic
@@ -54,7 +54,7 @@ async function verify() {
         // 6. Pause
         console.log('4. Pausing...');
         await axios.post(`${BASE_URL}/rooms/${roomId}/pause`);
-        const pausedState = (await axios.get(`${BASE_URL}/rooms/${roomId}/state`)).data;
+        const pausedState = (await axios.get(`${BASE_URL}/rooms/${roomId}/state`)).data.data;
         console.log(`   Paused at: ${pausedState.pauseTime}s`);
 
         if (pausedState.isPlaying === false && pausedState.startTime === null && pausedState.pauseTime > 0) {
