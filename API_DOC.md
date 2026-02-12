@@ -27,9 +27,80 @@ interface RoomState {
 
 ---
 
-## 二、 HTTP 接口
+## 二、 BFF 音乐接口 (统一数据层)
+
+> 🚀 **推荐使用**：后端已统一封装上游接口，提供标准化的搜索和解析服务，自动处理缓存和鉴权。
+
+### 1. 统一搜索
+* **URL**: `GET /api/music/search`
+* **Params**:
+  * `keyword`: 关键词
+  * `platform`: `netease` | `qq` | `kuwo`
+  * `page`: 页码 (默认 1)
+  * `limit`: 每页数量 (默认 20)
+* **Response**:
+  ```json
+  {
+      "code": 200,
+      "data": {
+          "list": [
+              {
+                  "id": "string",
+                  "name": "歌曲名",
+                  "artist": ["歌手名"],
+                  "album": "专辑名",
+                  "duration": 3000,
+                  "cover": "http://...",
+                  "platform": "netease"
+              }
+          ],
+          "total": 100,
+          "page": 1,
+          "limit": 20
+      }
+  }
+  ```
+
+### 2. 统一解析 (获取播放链接)
+* **URL**: `GET /api/music/url`
+* **Params**:
+  * `id`: 歌曲 ID
+  * `platform`: `netease` | `qq` | `kuwo`
+  * `quality`: `128k` | `320k` | `flac` (默认 320k)
+* **Response**:
+  ```json
+  {
+      "code": 200,
+      "data": "http://m10.music.126.net/..."
+  }
+  ```
+
+### 3. 音频流代理 (解决 CORS)
+* **URL**: `GET /api/music/stream`
+* **Params**:
+  * `url`: 原始音频链接 (需 encodeURIComponent)
+* **Response**: Binary Audio Stream
+* **Note**: 后端自动处理 Referer 防盗链和 CORS 头，支持 Range 拖拽播放。
+
+---
+
+## 三、 HTTP 房间接口 (旧)
 
 **Base URL**: `http://<server-ip>:3000`
+
+> ⚠️ **注意**：本项目已接入 **TuneHub V3** 音乐解析服务。所有 `/api/*` 开头的请求都会被代理到 TuneHub V3 API，并自动注入 API Key。
+> 前端无需手动处理鉴权。
+
+### 0. 外部音乐 API 代理
+* **Base Path**: `/api`
+* **说明**: 直接透传到 TuneHub V3。例如请求 `/api/v1/search` 实际访问 `https://tunehub.sayqz.com/api/v1/search`。
+* **常用接口**:
+  * `GET /api/v1/methods`: 获取可用方法列表
+  * `POST /api/v1/parse`: 解析歌曲（消耗积分）
+
+---
+
+### 1. 创建房间
 
 ### 1. 创建房间
 * **URL**: `POST /rooms`
