@@ -12,7 +12,7 @@ export class NeteaseAdapter {
             artist: item.artists?.map((ar: any) => ar.name) || [],
             album: item.album?.name || '',
             duration: item.duration || 0,
-            cover: item.album?.picUrl || '', // 搜索接口可能不返回封面，需详情补全，或尽量取
+            cover: item.album?.picUrl || item.artists?.[0]?.img1v1Url || '',
             platform: 'netease'
         }));
 

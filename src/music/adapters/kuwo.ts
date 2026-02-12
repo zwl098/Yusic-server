@@ -12,7 +12,9 @@ export class KuwoAdapter {
             artist: item.ARTIST?.split('&') || [], // 酷我 artist 是 '周杰伦&阿信' 格式
             album: item.ALBUM || '',
             duration: 0, // 酷我搜索列表可能不带时长
-            cover: '', // 需额外获取
+            cover: item.web_albumpic_short
+                ? `https://img1.kuwo.cn/star/albumcover/${item.web_albumpic_short}`
+                : (item.web_artistpic_short ? `https://img1.kuwo.cn/star/albumcover/${item.web_artistpic_short}` : ''),
             platform: 'kuwo'
         }));
 
