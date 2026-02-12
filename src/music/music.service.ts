@@ -62,7 +62,8 @@ export class MusicService {
                 const values = Object.values(params);
                 // 创建函数执行表达式: new Function('keyword', 'page', 'return keyword')
                 const fn = new Function(...keys, `return (${expression});`);
-                return String(fn(...values));
+                const result = fn(...values);
+                return result === undefined || result === null ? '' : String(result);
             } catch (e) {
                 console.warn(`Template evaluate failed: ${expression}`, e);
                 return match; // 保持原样

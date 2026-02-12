@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Server (ts-node)",
+            "type": "node",
+            "request": "launch",
+            "args": [
+                "src/index.ts"
+            ],
+            "runtimeArgs": [
+                "-r",
+                "ts-node/register"
+            ],
+            "cwd": "${workspaceFolder}",
+            "protocol": "inspector",
+            "internalConsoleOptions": "openOnSessionStart",
+            "envFile": "${workspaceFolder}/.env",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "name": "Attach to Process",
+            "type": "node",
+            "request": "attach",
+            "processId": "${command:PickProcess}",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        }
+    ]
+}

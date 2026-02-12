@@ -2,9 +2,10 @@ import { Song, SearchResult } from '../dto';
 
 export class QqAdapter {
     static search(data: any, page: number, limit: number): SearchResult {
-        // QQ 搜索结构通常为 data.song.list
-        const listData = data?.data?.song?.list || [];
-        const total = data?.data?.song?.totalnum || 0;
+        // QQ 搜索结构可能并不统一，尝试多种路径
+        // log output: req.data.body.song.list
+        const listData = data?.req?.data?.body?.song?.list || data?.data?.song?.list || [];
+        const total = data?.req?.data?.body?.song?.totalnum || data?.data?.song?.totalnum || 0;
 
         const list: Song[] = listData.map((item: any) => ({
             id: String(item.songmid), // QQ 使用 songmid 作为唯一标识更稳
