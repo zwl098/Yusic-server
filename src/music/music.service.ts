@@ -140,16 +140,17 @@ export class MusicService {
         return result;
     }
 
+
+
     /**
-     * 解析播放链接 (带防重复扣费缓存)
+     * 获取歌曲元数据 (包含 URL, 歌词, 封面)
      */
-    static async getUrl(platform: string, id: string, quality: string = '320k') {
-        // 缓存 key: parse:platform:id:quality
-        const key = `parse:${platform}:${id}:${quality}`;
+    static async fetchMetadata(platform: string, id: string, quality: string = '320k') {
+        const key = `metadata:${platform}:${id}:${quality}`;
         const cached = cache.get(key);
         if (cached) return cached;
 
-        // 调用 TuneHub Parse 接口 (消耗积分)
+        console.log(`[MusicService] Fetching metadata for ${platform}/${id}...`);
         try {
             const res = await axios.post(`${this.baseUrl}/v1/parse`, {
                 platform,
@@ -159,33 +160,88 @@ export class MusicService {
                 headers: { 'x-api-key': this.apiKey }
             });
 
-            console.log(`[Parse] ${platform} ${id} Response:`, JSON.stringify(res.data));
-
-            // TuneHub parse 返回结构: { code: 0, data: { data: [ { url: '...' } ], total: 1 } }
-            // 注意: data.data 才是数组
             const nestedData = res.data?.data?.data;
             if ((res.data?.code === 0 || res.data?.code === 200) && nestedData?.[0]) {
                 const item = nestedData[0];
-                const songUrl = typeof item === 'string' ? item : item.url;
-
-                if (!songUrl) throw new Error('No URL found');
 
                 // 强制 HTTPS (解决混合内容问题)
-                const httpsUrl = songUrl.replace(/^http:\/\//, 'https://');
+                if (item.url) item.url = item.url.replace(/^http:\/\//, 'https://');
+                if (item.cover) item.cover = item.cover.replace(/^http:\/\//, 'https://');
+                // Pic alias
+                if (item.pic) item.cover = item.pic.replace(/^http:\/\//, 'https://');
 
-                // 缓存 2 分钟
-                cache.set(key, httpsUrl, 120);
-                return httpsUrl;
+                // 缓存 10 分钟
+                cache.set(key, item, 600);
+                return item;
             } else {
                 throw new Error(res.data?.message || 'Parse failed');
             }
         } catch (e: any) {
+            console.error(`[MusicService] fetchMetadata failed:`, e.message);
             // 映射错误码
             if (e.response?.status === 402 || e.response?.data?.code === -2) {
                 throw new Error('Insufficient credits');
             }
             throw e;
         }
+    }
+
+    /**
+     * 获取歌词
+     * 优先使用 parse 接口返回的 lyrics 字段
+     */
+    static async getLyric(platform: string, id: string) {
+        // 1. Try Fetch Metadata First (Unified Source)
+        try {
+            const metadata: any = await this.fetchMetadata(platform, id);
+            if (metadata.lyrics) {
+                return { lrc: metadata.lyrics };
+            }
+        } catch (e) {
+            // metadata failed, try fallback
+        }
+
+        // 2. Fallback to old method
+        try {
+            const config = await this.getMethodConfig(platform, 'lrc');
+            if (config) {
+                return await this.executeRequest(config, { id });
+            }
+        } catch (e) { }
+
+        return { lrc: '[00:00.00] Lyrics not available' };
+    }
+
+    /**
+     * 获取封面
+     * 优先使用 parse 接口返回的 cover 字段
+     */
+    static async getPic(platform: string, id: string) {
+        try {
+            const metadata: any = await this.fetchMetadata(platform, id);
+            if (metadata.cover) {
+                return metadata.cover;
+            }
+        } catch (e) { }
+
+        // Fallback
+        try {
+            const config = await this.getMethodConfig(platform, 'pic');
+            if (config) {
+                return await this.executeRequest(config, { id });
+            }
+        } catch (e) { }
+
+        return null;
+    }
+
+    /**
+     * 解析播放链接
+     */
+    static async getUrl(platform: string, id: string, quality: string = '320k') {
+        const metadata: any = await this.fetchMetadata(platform, id, quality);
+        if (!metadata.url) throw new Error('No URL found');
+        return metadata.url;
     }
 
     /**

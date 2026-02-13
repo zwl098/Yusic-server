@@ -58,6 +58,34 @@ router.get('/url', async (req: Request, res: Response) => {
     }
 });
 
+// 获取歌词
+// GET /api/music/lrc?id=...&platform=netease
+router.get('/lrc', async (req: Request, res: Response) => {
+    try {
+        const { id, platform } = req.query;
+        if (!id || !platform) return error(res, 'Missing id or platform', 400);
+
+        const result = await MusicService.getLyric(platform as string, id as string);
+        success(res, result);
+    } catch (e: any) {
+        error(res, e.message || 'Get Lyric Error');
+    }
+});
+
+// 获取封面
+// GET /api/music/pic?id=...&platform=netease
+router.get('/pic', async (req: Request, res: Response) => {
+    try {
+        const { id, platform } = req.query;
+        if (!id || !platform) return error(res, 'Missing id or platform', 400);
+
+        const result = await MusicService.getPic(platform as string, id as string);
+        success(res, result);
+    } catch (e: any) {
+        error(res, e.message || 'Get Pic Error');
+    }
+});
+
 // 音频流代理接口 (解决 CORS/Referer 限制)
 // GET /api/music/stream?url=...
 router.get('/stream', async (req: Request, res: Response) => {
