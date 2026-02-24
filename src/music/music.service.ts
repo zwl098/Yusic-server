@@ -72,13 +72,14 @@ export class MusicService {
         });
 
         const actualConfig = JSON.parse(configStr);
+        console.log('actualConfig:', actualConfig);
         // 2. 发起请求
         // 注意：TuneHub 返回的 config.url 是上游真实地址
         // config.headers 也要带上
         try {
             const res = await axios({
                 method: actualConfig.method,
-                url: actualConfig.url,
+                // url: actualConfig.url,
                 params: actualConfig.params,
                 data: actualConfig.body,
                 headers: actualConfig.headers,
@@ -86,9 +87,25 @@ export class MusicService {
             });
             return res.data;
         } catch (e: any) {
-            console.error('Upstream Request Failed', e.message);
-            // 更详细的报错信息
-            throw new Error('Upstream Service Error ' + e.message);
+            const info = {
+                message: e.message,
+                code: e.code,
+                errno: e.errno,
+                syscall: e.syscall,
+                address: e.address,
+                port: e.port,
+                config: {
+                    method: e.config?.method,
+                    url: e.config?.url,
+                    timeout: e.config?.timeout,
+                    proxy: e.config?.proxy,
+                },
+                status: e.response?.status,
+                responseData: e.response?.data,
+                responseHeaders: e.response?.headers,
+            };
+            console.error('Upstream Request Failed:', JSON.stringify(info, null, 2));
+            throw new Error('Upstream Service Error ' + (e.response?.status ?? '') + ' ' + e.message + ' ' + JSON.stringify(info, null, 2));
         }
     }
 
