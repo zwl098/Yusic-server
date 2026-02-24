@@ -79,7 +79,7 @@ export class MusicService {
         try {
             const res = await axios({
                 method: actualConfig.method,
-                // url: actualConfig.url,
+                url: actualConfig.url,
                 params: actualConfig.params,
                 data: actualConfig.body,
                 headers: actualConfig.headers,
