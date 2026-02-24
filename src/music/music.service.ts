@@ -80,19 +80,15 @@ export class MusicService {
         // 2. 发起请求
         // 注意：TuneHub 返回的 config.url 是上游真实地址
         // config.headers 也要带上
+        const url = actualConfig.url?.replace(/^http:\/\//i, 'https://');
         try {
             const res = await axios({
                 method: actualConfig.method,
-                url: actualConfig.url,
+                url: url,
                 params: actualConfig.params,
                 data: actualConfig.body,
-                headers: {
-                    Connection: 'close',
-                    'User-Agent': 'Mozilla/5.0',
-                    ...actualConfig.headers,
-                },
-                timeout: 10000,
-                httpAgent,
+                headers: actualConfig.headers,
+                timeout: 10000
             });
             return res.data;
         } catch (e: any) {
@@ -113,7 +109,7 @@ export class MusicService {
                 responseData: e.response?.data,
                 responseHeaders: e.response?.headers,
             };
-            console.error('Upstream Request Failed:', JSON.stringify(info, null, 2));
+            // console.error('Upstream Request Failed:', JSON.stringify(info, null, 2));
             throw new Error('Upstream Service Error ' + (e.response?.status ?? '') + ' ' + e.message + ' ' + JSON.stringify(info, null, 2));
         }
     }
