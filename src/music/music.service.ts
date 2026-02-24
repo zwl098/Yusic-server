@@ -28,6 +28,7 @@ export class MusicService {
 
         try {
             const url = `${this.baseUrl}/v1/methods/${platform}/${func}`;
+            console.log('url:', url);
             const res = await axios.get(url, {
                 headers: { 'x-api-key': this.apiKey }
             });
@@ -71,7 +72,6 @@ export class MusicService {
         });
 
         const actualConfig = JSON.parse(configStr);
-
         // 2. 发起请求
         // 注意：TuneHub 返回的 config.url 是上游真实地址
         // config.headers 也要带上
@@ -87,7 +87,8 @@ export class MusicService {
             return res.data;
         } catch (e: any) {
             console.error('Upstream Request Failed', e.message);
-            throw new Error('Upstream Service Error');
+            // 更详细的报错信息
+            throw new Error('Upstream Service Error ' + e.message);
         }
     }
 
