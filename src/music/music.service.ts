@@ -4,6 +4,8 @@ import { Song, SearchResult } from './dto';
 import { NeteaseAdapter } from './adapters/netease';
 import { QqAdapter } from './adapters/qq';
 import { KuwoAdapter } from './adapters/kuwo';
+import http from 'http';
+import dns from 'dns';
 
 // 缓存配置：
 // - checkperiod: 120s 自动清理过期
@@ -72,7 +74,9 @@ export class MusicService {
         });
 
         const actualConfig = JSON.parse(configStr);
-        console.log('actualConfig:', actualConfig);
+        dns.setDefaultResultOrder('ipv4first'); // 顺便强制 ipv4，防止 ipv6 导致超时
+
+        const httpAgent = new http.Agent({ keepAlive: false });
         // 2. 发起请求
         // 注意：TuneHub 返回的 config.url 是上游真实地址
         // config.headers 也要带上
@@ -82,8 +86,13 @@ export class MusicService {
                 url: actualConfig.url,
                 params: actualConfig.params,
                 data: actualConfig.body,
-                headers: actualConfig.headers,
-                timeout: 10000
+                headers: {
+                    Connection: 'close',
+                    'User-Agent': 'Mozilla/5.0',
+                    ...actualConfig.headers,
+                },
+                timeout: 10000,
+                httpAgent,
             });
             return res.data;
         } catch (e: any) {
