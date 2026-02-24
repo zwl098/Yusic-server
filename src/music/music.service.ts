@@ -1,11 +1,14 @@
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first'); // 顺便强制 ipv4，防止 ipv6 导致超时
+
 import axios from 'axios';
 import NodeCache from 'node-cache';
 import { Song, SearchResult } from './dto';
 import { NeteaseAdapter } from './adapters/netease';
 import { QqAdapter } from './adapters/qq';
 import { KuwoAdapter } from './adapters/kuwo';
-import http from 'http';
-import dns from 'dns';
+import https from 'node:https';
+
 
 // 缓存配置：
 // - checkperiod: 120s 自动清理过期
@@ -74,9 +77,8 @@ export class MusicService {
         });
 
         const actualConfig = JSON.parse(configStr);
-        dns.setDefaultResultOrder('ipv4first'); // 顺便强制 ipv4，防止 ipv6 导致超时
 
-        const httpAgent = new http.Agent({ keepAlive: false });
+        const httpsAgent = new https.Agent({ family: 4, keepAlive: true });
         // 2. 发起请求
         // 注意：TuneHub 返回的 config.url 是上游真实地址
         // config.headers 也要带上
@@ -88,7 +90,8 @@ export class MusicService {
                 params: actualConfig.params,
                 data: actualConfig.body,
                 headers: actualConfig.headers,
-                timeout: 10000
+                timeout: 10000,
+                httpsAgent,
             });
             return res.data;
         } catch (e: any) {
